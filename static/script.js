@@ -3,11 +3,8 @@ function runCode() {
     const language = document.getElementById("language").value;
 
     document.getElementById("output").innerText = "⏳ Running...";
-    document.getElementById("status-run").innerText = "Running...";
-    document.getElementById("status-language").innerText =
-        language.charAt(0).toUpperCase() + language.slice(1);
 
-    fetch("http://127.0.0.1:5000/run", {
+    fetch("/run", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -19,12 +16,12 @@ function runCode() {
     })
     .then(response => response.json())
     .then(data => {
-        document.getElementById("output").innerText = data.output || data.error;
-        document.getElementById("status-run").innerText = "Completed";
+        document.getElementById("output").innerText =
+            data.output || data.error;
     })
     .catch(error => {
         console.error(error);
-        document.getElementById("output").innerText = "Error connecting to server";
-        document.getElementById("status-run").innerText = "Error";
+        document.getElementById("output").innerText =
+            "Error connecting to server";
     });
 }
