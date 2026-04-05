@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simplicode | Cloud Code Runner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <div class="page-bg"></div>
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+
+    <div class="navbar">
+        <div class="brand-block">
+            <div class="brand-row">
+                <h1>Simplicode</h1>
+                <span class="live-badge">
+                    <span class="live-dot"></span>
+                    Live • Ready to Run
+                </span>
+            </div>
+            <p class="tagline">A simple, smart, and stylish cloud code runner for quick execution and learning.</p>
+        </div>
+    </div>
+
+    <div class="hero-card">
+        <h2>Run. Test. Learn.</h2>
+        <p>
+            Simplicode helps you write and execute code in a clean browser-based environment.
+            It is designed to make coding simple, fast, and beginner-friendly.
+        </p>
+    </div>
+
+    <div class="main">
+
+        <div class="editor-section">
+            <div class="section-title">Code Editor</div>
+
+            <div class="top-bar">
+                <select id="language">
+                    <option value="python">Python</option>
+                    <option value="c">C</option>
+                    <option value="java">Java</option>
+                </select>
+
+                <button class="run-btn" onclick="runCode()">▶ Run</button>
+                <button class="clear-btn" onclick="clearCode()">🧹 Clear</button>
+            </div>
+
+            <div id="editor" class="editor-box"></div>
+        </div>
+
+        <div class="output-section">
+            <div class="output-header">
+                <span class="section-title">Output Console</span>
+                <button class="copy-btn" onclick="copyOutput()">📋 Copy</button>
+            </div>
+
+            <pre id="output">Click Run to see output...</pre>
+        </div>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+
+    <script>
+        require.config({
+            paths: {
+                vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs"
+            }
+        });
+
+        require(["vs/editor/editor.main"], function () {
+            window.editor = monaco.editor.create(document.getElementById("editor"), {
+                value: 'print("Welcome to Simplicode")',
+                language: "python",
+                theme: "vs-dark",
+                automaticLayout: true,
+                fontSize: 16,
+                minimap: { enabled: false },
+                roundedSelection: true,
+                scrollBeyondLastLine: false
+            });
+
+            document.getElementById("language").addEventListener("change", function () {
+                let selectedLanguage = this.value;
+
+                if (selectedLanguage === "python") {
+                    monaco.editor.setModelLanguage(editor.getModel(), "python");
+                    editor.setValue('print("Welcome to Simplicode")');
+                } 
+                else if (selectedLanguage === "c") {
+                    monaco.editor.setModelLanguage(editor.getModel(), "c");
+                    editor.setValue('#include <stdio.h>\n\nint main() {\n    printf("Welcome to Simplicode");\n    return 0;\n}');
+                } 
+                else if (selectedLanguage === "java") {
+                    monaco.editor.setModelLanguage(editor.getModel(), "java");
+                    editor.setValue('class Main {\n    public static void main(String[] args) {\n        System.out.println("Welcome to Simplicode");\n    }\n}');
+                }
+            });
+        });
+    </script>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <div class="status-bar">
+    <span id="status-language">Python</span>
+    <span>Simplicode Cloud IDE</span>
+    <span id="status-run">Ready</span>
+</div>
+</body>
+</html>
