@@ -10,38 +10,111 @@ app = Flask(__name__)
 def home():
     return render_template("index.html")
 
+
 @app.route("/run", methods=["POST"])
 def run_code():
     try:
         data = request.get_json()
-        code = data.get("code")
-        language = data.get("language")
+        code = data.get("code", "")
+        language = data.get("language", "")
 
-        if language != "python":
-            return jsonify({
-                "output": "",
-                "error": "Only Python is supported for now."
-            })
-
-        filename = f"{uuid.uuid4()}.py"
         temp_dir = tempfile.gettempdir()
-        file_path = os.path.join(temp_dir, filename)
+        unique_id = str(uuid.uuid4())
 
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(code)
+        output = ""
+        error = ""
 
-        result = subprocess.run(
-            ["python", file_path],
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
+        # 🐍 PYTHON
+        if language == "python":
+            filename = f"{unique_id}.py"
+            file_path = os.path.join(temp_dir, filename)
 
-        output = result.stdout
-        error = result.stderr
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(code)
 
-        if os.path.exists(file_path):
+            result = subprocess.run(
+                ["python", file_path],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+
+            output = result.stdout
+            error = result.stderr
+
             os.remove(file_path)
+
+        # 💻 C
+        elif language == "c":
+            source_name = f"{unique_id}.c"
+            exe_name = f"{unique_id}.exe" if os.name == "nt" else unique_id
+
+            source_path = os.path.join(temp_dir, source_name)
+            exe_path = os.path.join(temp_dir, exe_name)
+
+            with open(source_path, "w", encoding="utf-8") as f:
+                f.write(code)
+
+            compile_result = subprocess.run(
+                ["gcc", source_path, "-o", exe_path],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+
+            if compile_result.returncode != 0:
+                error = compile_result.stderr
+            else:
+                run_result = subprocess.run(
+                    [exe_path],
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+                output = run_result.stdout
+                error = run_result.stderr
+
+            if os.path.exists(source_path):
+                os.remove(source_path)
+            if os.path.exists(exe_path):
+                os.remove(exe_path)
+
+        # ☕ JAVA
+        elif language == "java":
+            class_name = "Main"
+            file_path = os.path.join(temp_dir, f"{class_name}.java")
+
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(code)
+
+            compile_result = subprocess.run(
+                ["javac", file_path],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+
+            class_file = os.path.join(temp_dir, f"{class_name}.class")
+
+            if compile_result.returncode != 0:
+                error = compile_result.stderr
+            else:
+                run_result = subprocess.run(
+                    ["java", "-cp", temp_dir, class_name],
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+                output = run_result.stdout
+                error = run_result.stderr
+
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            if os.path.exists(class_file):
+                os.remove(class_file)
+
+        else:
+            error = "Unsupported language"
 
         return jsonify({
             "output": output,
@@ -61,4 +134,4 @@ def run_code():
         })
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
